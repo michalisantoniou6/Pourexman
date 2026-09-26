@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#201450">
+  <title>Pourexman — a little maze adventure</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="brand"><span class="brand-face" aria-hidden="true">●</span><div><h1>Pourexman</h1><p>A little maze adventure</p></div></div>
+      <button id="soundButton" class="small-button" type="button" aria-pressed="true">🔊 Sound on</button>
+    </header>
+
+    <section class="game-shell" aria-label="Pourexman game">
+      <div class="progress" aria-live="polite"><span id="progressText">Find the 5 colorful stars!</span><span id="starsCount">⭐ 0 / 5</span></div>
+      <div class="canvas-wrap"><canvas id="game" width="704" height="576" aria-label="Maze game. Move with arrow keys or the big buttons below to collect five stars."></canvas>
+        <div id="overlay" class="overlay"><div class="overlay-card"><div class="hero" aria-hidden="true">🟡 ⭐ 👻</div><h2 id="overlayTitle">Let’s play!</h2><p id="overlayText">Find five colorful stars. Use the arrow keys or big buttons. The friendly ghosts are just being silly!</p><button id="startButton" class="primary-button" type="button">▶ Play</button></div></div>
+      </div>
+      <p id="message" class="message" aria-live="polite">Find the stars and say their colors!</p>
+      <div class="controls" aria-label="Movement controls">
+        <button class="move up" data-direction="up" type="button" aria-label="Move up">▲</button>
+        <button class="move left" data-direction="left" type="button" aria-label="Move left">◀</button>
+        <button class="move down" data-direction="down" type="button" aria-label="Move down">▼</button>
+        <button class="move right" data-direction="right" type="button" aria-label="Move right">▶</button>
+      </div>
+      <div class="footer-actions"><span>Collect colors • Count to five • Explore</span><button id="restartButton" class="small-button" type="button">↻ Start over</button></div>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
