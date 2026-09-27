@@ -1,10 +1,10 @@
 # Pourexman
 
-A cheerful, Pac-Man-inspired maze game for young children. Collect five colorful stars, hear their colors, and count from one to five. Friendly ghosts make the maze lively without lives, timers, or a losing screen.
+A cheerful, Pac-Man-inspired maze game for young children. Collect five colorful stars, see their colors, and count from one to five. Friendly ghosts make the maze lively without lives, timers, or a losing screen.
 
 ## Play
 
-Play online at [michalisantoniou6.github.io/Pourexman](https://michalisantoniou6.github.io/Pourexman/), or open `index.html` in a modern browser. Press **Play**, then use the arrow keys, WASD, the large on-screen buttons, or click a place in the maze. Select **Sound off** to mute spoken encouragement and short musical cues. The five stars above the maze show progress.
+Play online at [michalisantoniou6.github.io/Pourexman/index.html](https://michalisantoniou6.github.io/Pourexman/index.html), or open `index.html` in a modern browser. Press **Play** to start the original looping music. Press an arrow, WASD, or a large on-screen button to keep moving until a wall; tap near a star to glide to it; or press Space to head toward the nearest star. Select **Music off** to mute the music and sound effects. The five stars above the maze show progress. A new round begins automatically after all five stars are found.
 
 No installation, account, internet connection, or build step is required.
 

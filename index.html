@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#201450">
   <title>Pourexman — a little maze adventure</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <main class="app">
     <header class="top">
       <div class="brand"><span class="brand-face" aria-hidden="true">●</span><div><h1>Pourexman</h1><p>A little maze adventure</p></div></div>
-      <button id="soundButton" class="small-button" type="button" aria-pressed="true">🔊 Sound on</button>
+      <button id="soundButton" class="small-button" type="button" aria-pressed="true">♫ Music on</button>
     </header>
 
     <section class="game-shell" aria-label="Pourexman game">
       <div class="progress" aria-live="polite"><span id="progressText">Find the 5 colorful stars!</span><span id="starsCount">⭐ 0 / 5</span></div>
       <div id="starTrail" class="star-trail" aria-label="Five stars to find"></div>
       <div class="canvas-wrap"><canvas id="game" width="704" height="576" aria-label="Maze game. Move with arrow keys or the big buttons below to collect five stars."></canvas>
-        <div id="overlay" class="overlay"><div class="overlay-card"><div class="hero" aria-hidden="true">🟡 ⭐ 👻</div><h2 id="overlayTitle">Let’s play!</h2><p id="overlayText">Find five colorful stars. Use the arrow keys or big buttons. The friendly ghosts are just being silly!</p><button id="startButton" class="primary-button" type="button">▶ Play</button></div></div>
+        <div id="overlay" class="overlay"><div class="overlay-card"><div class="hero" aria-hidden="true">🟡 ⭐ 👻</div><h2>Let’s play!</h2><p>Tap a star or use the arrows. Find all five colors!</p><button id="startButton" class="primary-button" type="button">♫ Play!</button></div></div>
         <div id="colorCue" class="color-cue" aria-hidden="true"></div>
       </div>
       <p id="message" class="message" aria-live="polite">Find the stars and say their colors!</p>
@@ -28,9 +28,9 @@
         <button class="move down" data-direction="down" type="button" aria-label="Move down">▼</button>
         <button class="move right" data-direction="right" type="button" aria-label="Move right">▶</button>
       </div>
-      <div class="footer-actions"><span>Collect colors • Count to five • Explore</span><button id="restartButton" class="small-button" type="button">↻ Start over</button></div>
+      <div class="footer-actions"><span>Tap a star • Steer with arrows • Count to five</span></div>
     </section>
   </main>
-  <script src="game.js?v=2"></script>
+  <script src="game.js?v=3"></script>
 </body>
 </html>

@@ -21,16 +21,29 @@ canvas.getContext = () => new Proxy({
 const buttons = ['up', 'down', 'left', 'right'].map(direction => {
   const button = element(direction); button.dataset.direction = direction; return button;
 });
+const timeouts = new Map();
+let timeoutId = 0;
+class FakeAudioContext {
+  static instances = [];
+  constructor() { this.currentTime = 0; this.state = 'suspended'; this.destination = {}; this.created = 0; this.stopped = 0; FakeAudioContext.instances.push(this); }
+  resume() { this.state = 'running'; return Promise.resolve(); }
+  createOscillator() { this.created++; return {frequency:{value:0},connect(){},start(){},stop:()=>{this.stopped++;}}; }
+  createGain() { return {gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}}; }
+}
 const document = {
   querySelector: element, querySelectorAll: () => buttons,
   addEventListener(type, fn) { this[type] = fn; }
 };
 vm.runInNewContext(fs.readFileSync('game.js', 'utf8'), {
-  document, window: {}, Math, setInterval: () => 1, clearInterval() {},
-  clearTimeout() {}, setTimeout: fn => fn()
+  document, window: {AudioContext:FakeAudioContext}, Math, setInterval: () => 1, clearInterval() {},
+  clearTimeout(id) { timeouts.delete(id); },
+  setTimeout(fn, delay) { const id = ++timeoutId; timeouts.set(id, {fn, delay}); return id; }
 });
 element('#startButton').handlers.click();
 assert.equal(element('#overlay').classList.hidden, true);
+const audio = FakeAudioContext.instances[0];
+assert.equal(audio.state, 'running');
+assert.ok(audio.created >= 2, 'music should schedule more than a start chime');
 const map = [
   '###########', '#.........#', '#..##.##..#', '#.........#', '#.#.....#.#',
   '#.........#', '#..##.##..#', '#.........#', '###########'
@@ -59,6 +72,17 @@ for (const [index, goal] of goals.entries()) {
   current = goal;
 }
 assert.equal(element('#starsCount').textContent, '⭐ 5 / 5');
-assert.equal(element('#overlay').classList.hidden, false);
-assert.equal(element('#overlayTitle').textContent, 'You did it! 🎉');
-console.log('PASS: start, movement, all five reachable stars, counting, win screen');
+assert.equal(element('#overlay').classList.hidden, true);
+assert.equal(element('#progressText').textContent, 'Hooray! Five stars!');
+const nextRound = [...timeouts.values()].find(timer => timer.delay === 3100);
+assert.ok(nextRound, 'next round should be scheduled');
+nextRound.fn();
+assert.equal(element('#starsCount').textContent, '⭐ 0 / 5');
+assert.match(element('#progressText').textContent, /Round 2/);
+element('#soundButton').handlers.click();
+assert.equal(element('#soundButton').attrs['aria-pressed'], 'false');
+assert.ok(audio.stopped > 0, 'mute should stop scheduled audio');
+const notesBeforeUnmute = audio.created;
+element('#soundButton').handlers.click();
+assert.ok(audio.created > notesBeforeUnmute, 'unmute should restart music');
+console.log('PASS: music unlock, movement, five stars, next round, mute and unmute');
