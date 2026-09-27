@@ -4,7 +4,7 @@ A cheerful, Pac-Man-inspired maze game for young children. Collect five colorful
 
 ## Play
 
-Play online at [michalisantoniou6.github.io/Pourexman/index.html](https://michalisantoniou6.github.io/Pourexman/index.html), or open `index.html` in a modern browser. Press **Play** to start the original looping music. Press an arrow, WASD, or a large on-screen button to keep moving until a wall; tap near a star to glide to it; or press Space to head toward the nearest star. Select **Music off** to mute the music and sound effects. The five stars above the maze show progress. A new round begins automatically after all five stars are found.
+Play online at [michalisantoniou6.github.io/Pourexman/index.html](https://michalisantoniou6.github.io/Pourexman/index.html), or open `index.html` in a modern browser. Press **Play** to start the original looping music. Press an arrow, WASD, or a large on-screen button to keep moving until a wall; turns wait for the next tile center so movement stays smooth. Tap near a star to glide to it, or press Space to head toward the nearest star. Touching a ghost makes it wobble with a friendly boing sound and no penalty. Select **Music off** to mute the music and sound effects. The five stars above the maze show progress. A new round begins automatically after all five stars are found.
 
 No installation, account, internet connection, or build step is required.
 
