@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const elements = new Map();
 function element(id) {
   if (!elements.has(id)) elements.set(id, {
-    textContent: '', dataset: {}, handlers: {}, attrs: {},
+    textContent: '', innerHTML: '', style: {}, dataset: {}, handlers: {}, attrs: {},
     classList: { add() { this.hidden = true; }, remove() { this.hidden = false; } },
     addEventListener(type, fn) { this.handlers[type] = fn; },
     setAttribute(key, value) { this.attrs[key] = value; }, blur() {}
@@ -26,7 +26,8 @@ const document = {
   addEventListener(type, fn) { this[type] = fn; }
 };
 vm.runInNewContext(fs.readFileSync('game.js', 'utf8'), {
-  document, window: {}, Math, setInterval: () => 1, clearInterval() {}, setTimeout: fn => fn()
+  document, window: {}, Math, setInterval: () => 1, clearInterval() {},
+  clearTimeout() {}, setTimeout: fn => fn()
 });
 element('#startButton').handlers.click();
 assert.equal(element('#overlay').classList.hidden, true);
@@ -35,7 +36,8 @@ const map = [
   '#.........#', '#..##.##..#', '#.........#', '###########'
 ];
 let current = [5, 7];
-for (const goal of [[1, 1], [9, 1], [5, 4], [1, 7], [9, 7]]) {
+const goals = [[1, 1], [9, 1], [5, 4], [1, 7], [9, 7]];
+for (const [index, goal] of goals.entries()) {
   const queue = [[...current, []]], seen = new Set([current.join(',')]);
   let route;
   while (queue.length) {
@@ -50,6 +52,10 @@ for (const goal of [[1, 1], [9, 1], [5, 4], [1, 7], [9, 7]]) {
   }
   assert.ok(route, `star at ${goal} is reachable`);
   route.forEach(direction => element(direction).handlers.click());
+  const visibleCount = Number(element('#starsCount').textContent.match(/\d+/)[0]);
+  assert.equal((element('#starTrail').innerHTML.match(/class="trail-star found"/g) || []).length, visibleCount);
+  assert.ok(visibleCount >= index + 1);
+  assert.ok(element('#colorCue').textContent.includes('of 5!'));
   current = goal;
 }
 assert.equal(element('#starsCount').textContent, '⭐ 5 / 5');

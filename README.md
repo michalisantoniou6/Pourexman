@@ -4,7 +4,7 @@ A cheerful, Pac-Man-inspired maze game for young children. Collect five colorful
 
 ## Play
 
-Open `index.html` in a modern browser. Press **Play**, then use the arrow keys, WASD, the large on-screen buttons, or click a place in the maze. Select **Sound off** to mute spoken encouragement.
+Play online at [michalisantoniou6.github.io/Pourexman](https://michalisantoniou6.github.io/Pourexman/), or open `index.html` in a modern browser. Press **Play**, then use the arrow keys, WASD, the large on-screen buttons, or click a place in the maze. Select **Sound off** to mute spoken encouragement and short musical cues. The five stars above the maze show progress.
 
 No installation, account, internet connection, or build step is required.
 
