@@ -4,6 +4,8 @@
   const overlay = document.querySelector('#overlay');
   const startButton = document.querySelector('#startButton');
   const soundButton = document.querySelector('#soundButton');
+  const ghostBoing = document.querySelector('#ghostBoing');
+  const ghostOhNo = document.querySelector('#ghostOhNo');
   const progressText = document.querySelector('#progressText');
   const starsCount = document.querySelector('#starsCount');
   const message = document.querySelector('#message');
@@ -37,7 +39,7 @@
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   let player, stars, dots, ghosts, found, playing, soundOn = true, ghostTimer, ghostBumpTimer, autoTimer, travelTimer, turnTimer, cueTimer, nextRoundTimer, celebrateTimer;
   let audioContext, musicTimer, nextBeat = 0, musicStep = 0;
-  let lastGhostAt = 0, effects = [], animationStarted = false, lastFrame = 0, round = 0, lastStarCount = 0, chompCount = 0, hasStarted = false, desiredDirection = null;
+  let lastGhostAt = 0, ghostBumpCount = 0, effects = [], animationStarted = false, lastFrame = 0, round = 0, lastStarCount = 0, chompCount = 0, hasStarted = false, desiredDirection = null;
   const activeNotes = new Set();
   const melody = [523,0,659,0,784,659,523,0,587,0,659,0,784,659,587,0,523,659,784,0,880,784,659,0,587,659,523,0,392,0,523,0];
 
@@ -97,6 +99,15 @@
       activeNotes.add(oscillator);
       oscillator.start(at); oscillator.stop(at + .36);
     } catch (_) { note(440, 0, .2, .1); }
+  }
+  function playGhostVoice(clip) {
+    if (!soundOn || document.hidden) return;
+    try {
+      ghostBoing.pause(); ghostOhNo.pause();
+      clip.currentTime = 0;
+      clip.volume = .9;
+      clip.play().catch(() => {});
+    } catch (_) { /* The visual reaction still works without audio. */ }
   }
   function scheduleMusic() {
     if (!audioContext || !soundOn || document.hidden) return;
@@ -220,9 +231,12 @@
       return;
     }
     lastGhostAt = Date.now(); ghost.stunnedUntil = lastGhostAt + 1050; player.bumpedAt = lastGhostAt;
-    message.textContent = 'BOING! The silly ghost wiggled!';
-    effects.push({x:ghost.x*tile+32,y:ghost.y*tile+32,color:ghost.color,started:lastGhostAt,kind:'boing'});
+    const saysBoing = ghostBumpCount++ % 2 === 0;
+    const reaction = saysBoing ? 'BOING!' : 'OH NO!';
+    message.textContent = `${reaction} The silly ghost wiggled!`;
+    effects.push({x:ghost.x*tile+32,y:ghost.y*tile+32,color:ghost.color,started:lastGhostAt,kind:'boing',reaction});
     boing();
+    playGhostVoice(saysBoing ? ghostBoing : ghostOhNo);
   }
   function moveGhosts() {
     if (!playing) return;
@@ -298,7 +312,7 @@
         ctx.strokeStyle='#fff4a8';ctx.lineWidth=5*(1-progress)+1;
         ctx.beginPath();ctx.arc(effect.x,effect.y,18+progress*48,0,Math.PI*2);ctx.stroke();
         ctx.font='bold 24px ui-rounded, sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff4a8';
-        ctx.fillText('BOING!',effect.x,effect.y-26-progress*35);
+        ctx.fillText(effect.reaction,effect.x,effect.y-26-progress*35);
         ctx.globalAlpha=1;
         return;
       }
@@ -376,10 +390,11 @@
     soundOn=!soundOn;
     soundButton.textContent=soundOn?'♫ Music on':'♪ Music off';
     soundButton.setAttribute('aria-pressed',String(soundOn));
-    if (soundOn && hasStarted) startMusic(); else stopNotes();
+    if (soundOn && hasStarted) startMusic(); else { stopNotes(); ghostBoing.pause(); ghostOhNo.pause(); }
   });
   document.addEventListener('visibilitychange',()=>{
-    if (document.hidden) stopNotes(); else if (hasStarted && soundOn) startMusic();
+    if (document.hidden) { stopNotes(); ghostBoing.pause(); ghostOhNo.pause(); }
+    else if (hasStarted && soundOn) startMusic();
   });
   resetRound();
 })();

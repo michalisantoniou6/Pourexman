@@ -13,6 +13,8 @@ function element(id) {
     textContent: '', innerHTML: '', style: {}, dataset: {}, handlers: {}, attrs: {},
     classList: { add() { this.hidden = true; }, remove() { this.hidden = false; } },
     addEventListener(type, fn) { this.handlers[type] = fn; },
+    play() { this.plays = (this.plays || 0) + 1; return Promise.resolve(); },
+    pause() { this.pauses = (this.pauses || 0) + 1; },
     setAttribute(key, value) { this.attrs[key] = value; }, blur() {}
   });
   return elements.get(id);
@@ -65,6 +67,11 @@ function press(direction) {
 press('up'); press('up');
 assert.match(element('#message').textContent, /BOING!/);
 assert.ok(audio.created >= 5, 'ghost bump should make a sound');
+assert.equal(element('#ghostBoing').plays, 1, 'first bump should say Boing');
+fakeNow += 1200;
+press('down'); press('up');
+assert.match(element('#message').textContent, /OH NO!/);
+assert.equal(element('#ghostOhNo').plays, 1, 'second bump should say Oh no');
 fakeNow += 100;
 const ghostTick = [...intervals.values()].find(timer => timer.delay === 850);
 assert.ok(ghostTick, 'ghosts should continue moving');
@@ -127,7 +134,8 @@ assert.deepEqual(lastPlayerArc.slice(0,2), [2*64+32,6*64+32], 'an early up press
 element('#soundButton').handlers.click();
 assert.equal(element('#soundButton').attrs['aria-pressed'], 'false');
 assert.ok(audio.stopped > 0, 'mute should stop scheduled audio');
+assert.ok(element('#ghostBoing').pauses > 0 && element('#ghostOhNo').pauses > 0, 'mute should stop both voice clips');
 const notesBeforeUnmute = audio.created;
 element('#soundButton').handlers.click();
 assert.ok(audio.created > notesBeforeUnmute, 'unmute should restart music');
-console.log('PASS: buffered turns, random stars and colors, ghost boing, next round, music and mute');
+console.log('PASS: buffered turns, random stars and colors, alternating ghost voices, next round, music and mute');
