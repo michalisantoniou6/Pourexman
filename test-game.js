@@ -21,7 +21,7 @@ const canvas = element('#game');
 canvas.width = 704; canvas.height = 576;
 const drawnArcs = [];
 canvas.getContext = () => new Proxy({
-  beginPath() {}, roundRect() {}, fill() {}, arc(x,y) { drawnArcs.push([x,y]); }, lineTo() {}, moveTo() {},
+  beginPath() {}, roundRect() {}, fill() {}, arc(x,y,r) { drawnArcs.push([x,y,r]); }, lineTo() {}, moveTo() {},
   closePath() {}, quadraticCurveTo() {}, stroke() {}, fillRect() {},
   save() {}, restore() {}, translate() {}, rotate() {}, scale() {}, fillText() {}
 }, { set(target, key, value) { target[key] = value; return true; } });
@@ -112,10 +112,22 @@ assert.ok(nextTotal >= 3 && nextTotal <= 7);
 assert.notEqual(nextTotal,total,'consecutive rounds should have different star counts');
 assert.notEqual(element('#starTrail').innerHTML,firstColors,'colors should vary between rounds');
 assert.match(element('#progressText').textContent, /Round 2/);
+press('left');
+document.keydown({key:'ArrowUp',repeat:false,preventDefault(){}});
+const turnRequest = [...timeouts.values()].find(timer => timer.delay === 150);
+assert.ok(turnRequest, 'a mid-tile turn should wait for the next tile center');
+fakeNow += 150; turnRequest.fn();
+const movementTick = [...intervals.values()].find(timer => timer.delay === 150);
+assert.ok(movementTick, 'movement should continue while the turn is buffered');
+fakeNow += 150; movementTick.fn();
+fakeNow += 150; movementTick.fn();
+fakeNow += 150; ghostTick.fn();
+const lastPlayerArc = drawnArcs.filter(([, ,r]) => r === 25).at(-1);
+assert.deepEqual(lastPlayerArc.slice(0,2), [2*64+32,6*64+32], 'an early up press should turn at the next opening');
 element('#soundButton').handlers.click();
 assert.equal(element('#soundButton').attrs['aria-pressed'], 'false');
 assert.ok(audio.stopped > 0, 'mute should stop scheduled audio');
 const notesBeforeUnmute = audio.created;
 element('#soundButton').handlers.click();
 assert.ok(audio.created > notesBeforeUnmute, 'unmute should restart music');
-console.log('PASS: keyboard tutorial, random stars and colors, ghost boing, next round, music and mute');
+console.log('PASS: buffered turns, random stars and colors, ghost boing, next round, music and mute');

@@ -21,7 +21,7 @@
     '###########'
   ];
   const tile = 64;
-  const stepMs = 190;
+  const stepMs = 150;
   const dirs = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0] };
   const starColors = [
     {name:'Red',color:'#ff697c'},
@@ -37,7 +37,7 @@
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   let player, stars, dots, ghosts, found, playing, soundOn = true, ghostTimer, ghostBumpTimer, autoTimer, travelTimer, turnTimer, cueTimer, nextRoundTimer, celebrateTimer;
   let audioContext, musicTimer, nextBeat = 0, musicStep = 0;
-  let lastGhostAt = 0, effects = [], animationStarted = false, lastFrame = 0, round = 0, lastStarCount = 0, chompCount = 0, hasStarted = false;
+  let lastGhostAt = 0, effects = [], animationStarted = false, lastFrame = 0, round = 0, lastStarCount = 0, chompCount = 0, hasStarted = false, desiredDirection = null;
   const activeNotes = new Set();
   const melody = [523,0,659,0,784,659,523,0,587,0,659,0,784,659,587,0,523,659,784,0,880,784,659,0,587,659,523,0,392,0,523,0];
 
@@ -154,7 +154,7 @@
     dots = new Set();
     map.forEach((row,y) => [...row].forEach((cell,x) => { if(cell === '.' && !stars.some(s => s.x === x && s.y === y)) dots.add(`${x},${y}`); }));
     ghosts = [{x:5,y:1,color:'#ff8fa8',last:'left'},{x:5,y:5,color:'#7ad6f2',last:'right'}];
-    found = 0; playing = hasStarted; lastGhostAt = 0; effects = [];
+    found = 0; playing = hasStarted; lastGhostAt = 0; effects = []; desiredDirection = null;
     progressText.textContent = round ? `Round ${round+1}: find ${starCount} stars!` : `Find the ${starCount} colorful stars!`;
     starsCount.textContent = `⭐ 0 / ${starCount}`;
     message.textContent = 'Use your arrow keys to find the stars!';
@@ -333,17 +333,19 @@
   function steer(direction) {
     if (!playing) return;
     clearInterval(autoTimer); clearInterval(travelTimer); clearTimeout(turnTimer);
+    desiredDirection = direction;
     const remaining = Math.max(0,stepMs-(Date.now()-player.movedAt));
     const turn = () => {
       if (!playing) return;
-      const previous = player.dir;
-      let chosen = direction;
-      if (!move(chosen)) {
-        if (chosen === previous || !move(previous)) return;
-        chosen = previous;
-      }
+      const advance = () => {
+        const [wantX,wantY] = dirs[desiredDirection];
+        const next = open(player.x+wantX,player.y+wantY) ? desiredDirection : player.dir;
+        if (!open(player.x+dirs[next][0],player.y+dirs[next][1])) return false;
+        return move(next);
+      };
+      if (!advance()) return;
       travelTimer = setInterval(() => {
-        if (!move(chosen)) {clearInterval(travelTimer);travelTimer=null;}
+        if (!advance()) {clearInterval(travelTimer);travelTimer=null;}
       }, stepMs);
     };
     if (remaining) turnTimer=setTimeout(turn,remaining); else turn();
@@ -353,7 +355,7 @@
   }
   document.addEventListener('keydown',e=>{
     const direction={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'}[e.key];
-    if(direction){e.preventDefault();if(!e.repeat){if(!hasStarted)start();steer(direction);}}
+    if(direction){e.preventDefault();if(!hasStarted)start();if(!e.repeat || desiredDirection !== direction)steer(direction);}
     else if(e.key===' '){
       if (document.activeElement === soundButton) return;
       e.preventDefault();
