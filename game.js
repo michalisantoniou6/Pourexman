@@ -11,6 +11,8 @@
   const message = document.querySelector('#message');
   const starTrail = document.querySelector('#starTrail');
   const colorCue = document.querySelector('#colorCue');
+  const gameShell = document.querySelector('.game-shell');
+  const stageBanner = document.querySelector('#stageBanner');
   const map = [
     '###########',
     '#.........#',
@@ -39,7 +41,7 @@
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   let player, stars, dots, ghosts, found, playing, soundOn = true, ghostTimer, ghostBumpTimer, autoTimer, travelTimer, turnTimer, cueTimer, nextRoundTimer, celebrateTimer;
   let audioContext, musicTimer, nextBeat = 0, musicStep = 0;
-  let lastGhostAt = 0, ghostBumpCount = 0, effects = [], animationStarted = false, lastFrame = 0, round = 0, lastStarCount = 0, chompCount = 0, hasStarted = false, desiredDirection = null;
+  let lastGhostAt = 0, ghostBumpCount = 0, effects = [], movementTrail = [], animationStarted = false, lastFrame = 0, round = 0, lastStarCount = 0, chompCount = 0, hasStarted = false, desiredDirection = null;
   const activeNotes = new Set();
   const melody = [523,0,659,0,784,659,523,0,587,0,659,0,784,659,587,0,523,659,784,0,880,784,659,0,587,659,523,0,392,0,523,0];
 
@@ -165,7 +167,9 @@
     dots = new Set();
     map.forEach((row,y) => [...row].forEach((cell,x) => { if(cell === '.' && !stars.some(s => s.x === x && s.y === y)) dots.add(`${x},${y}`); }));
     ghosts = [{x:5,y:1,color:'#ff8fa8',last:'left'},{x:5,y:5,color:'#7ad6f2',last:'right'}];
-    found = 0; playing = hasStarted; lastGhostAt = 0; effects = []; desiredDirection = null;
+    found = 0; playing = hasStarted; lastGhostAt = 0; effects = []; movementTrail = []; desiredDirection = null;
+    gameShell.classList.remove('celebrating');
+    stageBanner.classList.remove('show');
     progressText.textContent = round ? `Round ${round+1}: find ${starCount} stars!` : `Find the ${starCount} colorful stars!`;
     starsCount.textContent = `⭐ 0 / ${starCount}`;
     message.textContent = 'Use your arrow keys to find the stars!';
@@ -191,6 +195,10 @@
     const x = player.x + dx, y = player.y + dy;
     if (!open(x,y)) { draw(Date.now()); return false; }
     player.fromX = player.x; player.fromY = player.y; player.movedAt = Date.now();
+    if (!reducedMotion) {
+      movementTrail.push({x:player.fromX*tile+32,y:player.fromY*tile+32,started:player.movedAt});
+      if (movementTrail.length > 4) movementTrail.shift();
+    }
     player.x = x; player.y = y;
     if (dots.delete(`${x},${y}`) && ++chompCount % 2 === 0) note(chompCount % 4 ? 220 : 260, 0, .07, .035);
     const star = stars.find(s => !s.found && s.x === x && s.y === y);
@@ -207,8 +215,16 @@
         playing = false; clearInterval(ghostTimer); clearInterval(autoTimer); clearInterval(travelTimer); clearTimeout(turnTimer); clearTimeout(ghostBumpTimer);
         progressText.textContent = `Hooray! ${stars.length} stars!`;
         message.textContent = 'Hooray! Here comes a new adventure!';
+        gameShell.classList.add('celebrating');
+        stageBanner.classList.add('show');
         note(784, .42, .19, .14); note(880, .64, .19, .14); note(1047, .86, .5, .16);
+        note(262, .42, .65, .065, 'sine'); note(392, .86, .75, .07, 'sine');
         if (!reducedMotion) effects.push(...stars.map(s => ({x:s.x*tile+32,y:s.y*tile+32,color:s.color,started:Date.now()+650})));
+        if (!reducedMotion) effects.push(...Array.from({length:26},(_,i) => ({
+          kind:'confetti', x:Math.random()*canvas.width, y:-Math.random()*190,
+          color:starColors[i%starColors.length].color, speed:130+Math.random()*120,
+          drift:Math.random()*35+12, started:Date.now()
+        })));
         celebrateTimer = setTimeout(() => {
           colorCue.textContent = `🎉 ${stars.length} STARS! 🎉`;
           colorCue.style.borderColor = '#ffd449';
@@ -270,6 +286,16 @@
       const twinkle = reducedMotion ? 0 : Math.sin(time/370+i*1.7)*2;
       starShape(s.x*tile+32,s.y*tile+32,24+twinkle,s.color);
     });
+    movementTrail = movementTrail.filter(s => time-s.started < 470);
+    movementTrail.forEach(s => {
+      const life = Math.max(0,1-(time-s.started)/470);
+      ctx.save();
+      ctx.globalAlpha = life*.42;
+      ctx.fillStyle = '#ffe36d';
+      ctx.shadowColor = '#ffe36d'; ctx.shadowBlur = 22;
+      ctx.beginPath(); ctx.arc(s.x,s.y,11+life*6,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    });
     ghosts.forEach((g,i)=>{
       const float = reducedMotion ? 0 : Math.sin(time/410+i*2)*2;
       const hitTime = time - (g.stunnedUntil - 1050);
@@ -303,10 +329,19 @@
     ctx.fillStyle='#e9a632';ctx.beginPath();ctx.moveTo(cx,cy+4);ctx.arc(cx,cy+4,25,facing+mouth,facing+Math.PI*2-mouth);ctx.closePath();ctx.fill();
     ctx.fillStyle='#ffd645';ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,25,facing+mouth,facing+Math.PI*2-mouth);ctx.closePath();ctx.fill();
     ctx.fillStyle='#10183d';ctx.beginPath();ctx.arc(cx+3,cy-13,3.2,0,Math.PI*2);ctx.fill();
-    effects = effects.filter(effect => time - effect.started < (effect.kind==='boing'?850:650));
+    effects = effects.filter(effect => time - effect.started < (effect.kind==='confetti'?2700:effect.kind==='boing'?850:650));
     effects.forEach(effect => {
       if (time < effect.started) return;
-      const progress = Math.max(0,(time-effect.started)/(effect.kind==='boing'?850:650));
+      const progress = Math.max(0,(time-effect.started)/(effect.kind==='confetti'?2700:effect.kind==='boing'?850:650));
+      if (effect.kind === 'confetti') {
+        const x = effect.x + Math.sin(progress*12+effect.x)*effect.drift;
+        const y = effect.y + progress*2.7*effect.speed;
+        ctx.save(); ctx.translate(x,y); ctx.rotate(progress*8+effect.x);
+        ctx.globalAlpha = Math.min(1,(1-progress)*2);
+        ctx.fillStyle = effect.color; ctx.fillRect(-5,-7,10,14);
+        ctx.restore();
+        return;
+      }
       if (effect.kind === 'boing') {
         ctx.globalAlpha=1-progress;
         ctx.strokeStyle='#fff4a8';ctx.lineWidth=5*(1-progress)+1;

@@ -110,10 +110,12 @@ for (const goal of goals) {
 assert.equal(element('#starsCount').textContent, `⭐ ${total} / ${total}`);
 assert.equal(element('#overlay').classList.hidden, true);
 assert.equal(element('#progressText').textContent, `Hooray! ${total} stars!`);
+assert.equal(element('#stageBanner').classList.hidden, true, 'star parade should appear at round completion');
 const firstColors = element('#starTrail').innerHTML;
 const nextRound = [...timeouts.values()].find(timer => timer.delay === 3100);
 assert.ok(nextRound, 'next round should be scheduled');
 nextRound.fn();
+assert.equal(element('#stageBanner').classList.hidden, false, 'parade should clear for the next round');
 const nextTotal = Number(element('#starsCount').textContent.match(/\/ (\d+)/)[1]);
 assert.ok(nextTotal >= 3 && nextTotal <= 7);
 assert.notEqual(nextTotal,total,'consecutive rounds should have different star counts');

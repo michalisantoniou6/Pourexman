@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090d27">
   <title>Pourexman — a little maze adventure</title>
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
   <main class="app">
@@ -20,6 +20,7 @@
       <div class="canvas-wrap"><canvas id="game" width="704" height="576" aria-label="Maze game. Use the keyboard arrow keys to collect colorful stars."></canvas>
         <div id="overlay" class="overlay"><div class="overlay-card"><div class="hero" aria-hidden="true">🟡 ⭐ 👻</div><h2>Let’s play!</h2><p>Press the arrow keys to move!</p><div class="key-guide" aria-label="Keyboard arrow keys"><kbd>↑</kbd><div><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></div></div><button id="startButton" class="primary-button" type="button">♫ Play!</button></div></div>
         <div id="colorCue" class="color-cue" aria-hidden="true"></div>
+        <div id="stageBanner" class="stage-banner" aria-hidden="true"><span>★ ★ ★</span><strong>STAGE CLEAR!</strong><span>★ ★ ★</span></div>
       </div>
       <p id="message" class="message" aria-live="polite">Find the stars and say their colors!</p>
       <div class="footer-actions"><span>Arrow keys • Find colors • Count stars</span></div>
@@ -27,6 +28,6 @@
   </main>
   <audio id="ghostBoing" preload="auto" src="boing.wav"></audio>
   <audio id="ghostOhNo" preload="auto" src="oh-no.wav"></audio>
-  <script src="game.js?v=8"></script>
+  <script src="game.js?v=9"></script>
 </body>
 </html>

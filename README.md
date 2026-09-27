@@ -4,7 +4,7 @@ A cheerful, Pac-Man-inspired maze game for young children. Collect a changing nu
 
 ## Play
 
-Play online at [michalisantoniou6.github.io/Pourexman/index.html](https://michalisantoniou6.github.io/Pourexman/index.html), or open `index.html` in a modern browser. The opening tutorial shows the keyboard arrows; pressing one also starts the game and its original looping music. Press an arrow or WASD to keep moving until a wall. An early turn stays queued and happens at the next opening, with smooth 150 ms tile movement. Tap near a star to glide to it, or press Space to head toward the nearest star. Touching a ghost makes it wobble and alternately say “Boing!” and “Oh no!” with no penalty. Select **Music off** to mute the music and sound effects. The stars above the maze show progress. Each new round chooses 3 to 7 stars in shuffled positions and colors.
+Play online at [michalisantoniou6.github.io/Pourexman/index.html](https://michalisantoniou6.github.io/Pourexman/index.html), or open `index.html` in a modern browser. The opening tutorial shows the keyboard arrows; pressing one also starts the game and its original looping music. Press an arrow or WASD to keep moving until a wall. An early turn stays queued and happens at the next opening, with smooth 150 ms tile movement and a short neon wake. Tap near a star to glide to it, or press Space to head toward the nearest star. Touching a ghost makes it wobble and alternately say “Boing!” and “Oh no!” with no penalty. Select **Music off** to mute the music and sound effects. The stars above the maze show progress; completing them starts a brief arcade parade. Each new round chooses 3 to 7 stars in shuffled positions and colors.
 
 No installation, account, internet connection, or build step is required.
 
