@@ -2,6 +2,9 @@
 const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
+const html = fs.readFileSync('index.html','utf8');
+assert.match(html, /class="key-guide"/);
+assert.doesNotMatch(html, /class="controls"/);
 let fakeNow = 1800000000000;
 class FakeDate extends Date { static now() { return fakeNow; } }
 const elements = new Map();
@@ -22,9 +25,6 @@ canvas.getContext = () => new Proxy({
   closePath() {}, quadraticCurveTo() {}, stroke() {}, fillRect() {},
   save() {}, restore() {}, translate() {}, rotate() {}, scale() {}, fillText() {}
 }, { set(target, key, value) { target[key] = value; return true; } });
-const buttons = ['up', 'down', 'left', 'right'].map(direction => {
-  const button = element(direction); button.dataset.direction = direction; return button;
-});
 const timeouts = new Map();
 let timeoutId = 0;
 const intervals = new Map();
@@ -37,11 +37,14 @@ class FakeAudioContext {
   createGain() { return {gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}}; }
 }
 const document = {
-  querySelector: element, querySelectorAll: () => buttons,
+  querySelector: element, querySelectorAll: () => [],
   addEventListener(type, fn) { this[type] = fn; }
 };
+let seed = 12345;
+const fakeMath = Object.create(Math);
+fakeMath.random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 2**32; };
 vm.runInNewContext(fs.readFileSync('game.js', 'utf8'), {
-  document, window: {AudioContext:FakeAudioContext}, Math, Date:FakeDate,
+  document, window: {AudioContext:FakeAudioContext}, Math:fakeMath, Date:FakeDate,
   setInterval(fn,delay) {const id=++intervalId;intervals.set(id,{fn,delay});return id;},
   clearInterval(id) {intervals.delete(id);},
   clearTimeout(id) { timeouts.delete(id); },
@@ -52,7 +55,13 @@ assert.equal(element('#overlay').classList.hidden, true);
 const audio = FakeAudioContext.instances[0];
 assert.equal(audio.state, 'running');
 assert.ok(audio.created >= 2, 'music should schedule more than a start chime');
-function press(direction) { fakeNow += 250; element(direction).handlers.click(); }
+const total = Number(element('#starsCount').textContent.match(/\/ (\d+)/)[1]);
+assert.ok(total >= 3 && total <= 7, 'round should have 3–7 stars');
+assert.equal((element('#starTrail').innerHTML.match(/class="trail-star"/g)||[]).length,total);
+function press(direction) {
+  fakeNow += 250;
+  document.keydown({key:{up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight'}[direction],repeat:false,preventDefault(){}});
+}
 press('up'); press('up');
 assert.match(element('#message').textContent, /BOING!/);
 assert.ok(audio.created >= 5, 'ghost bump should make a sound');
@@ -66,8 +75,9 @@ const map = [
   '#.........#', '#..##.##..#', '#.........#', '###########'
 ];
 let current = [5, 5];
-const goals = [[1, 1], [9, 1], [5, 4], [1, 7], [9, 7]];
-for (const [index, goal] of goals.entries()) {
+const goals = [];
+map.forEach((row,y) => [...row].forEach((cell,x) => {if(cell==='.') goals.push([x,y]);}));
+for (const goal of goals) {
   const queue = [[...current, []]], seen = new Set([current.join(',')]);
   let route;
   while (queue.length) {
@@ -81,20 +91,26 @@ for (const [index, goal] of goals.entries()) {
     }
   }
   assert.ok(route, `star at ${goal} is reachable`);
-  route.forEach(press);
+  for (const direction of route) {
+    press(direction);
+    if (Number(element('#starsCount').textContent.match(/^(?:⭐ )?(\d+)/)[1]) === total) break;
+  }
   const visibleCount = Number(element('#starsCount').textContent.match(/\d+/)[0]);
   assert.equal((element('#starTrail').innerHTML.match(/class="trail-star found"/g) || []).length, visibleCount);
-  assert.ok(visibleCount >= index + 1);
-  assert.ok(element('#colorCue').textContent.includes('of 5!'));
+  if (visibleCount === total) break;
   current = goal;
 }
-assert.equal(element('#starsCount').textContent, '⭐ 5 / 5');
+assert.equal(element('#starsCount').textContent, `⭐ ${total} / ${total}`);
 assert.equal(element('#overlay').classList.hidden, true);
-assert.equal(element('#progressText').textContent, 'Hooray! Five stars!');
+assert.equal(element('#progressText').textContent, `Hooray! ${total} stars!`);
+const firstColors = element('#starTrail').innerHTML;
 const nextRound = [...timeouts.values()].find(timer => timer.delay === 3100);
 assert.ok(nextRound, 'next round should be scheduled');
 nextRound.fn();
-assert.equal(element('#starsCount').textContent, '⭐ 0 / 5');
+const nextTotal = Number(element('#starsCount').textContent.match(/\/ (\d+)/)[1]);
+assert.ok(nextTotal >= 3 && nextTotal <= 7);
+assert.notEqual(nextTotal,total,'consecutive rounds should have different star counts');
+assert.notEqual(element('#starTrail').innerHTML,firstColors,'colors should vary between rounds');
 assert.match(element('#progressText').textContent, /Round 2/);
 element('#soundButton').handlers.click();
 assert.equal(element('#soundButton').attrs['aria-pressed'], 'false');
@@ -102,4 +118,4 @@ assert.ok(audio.stopped > 0, 'mute should stop scheduled audio');
 const notesBeforeUnmute = audio.created;
 element('#soundButton').handlers.click();
 assert.ok(audio.created > notesBeforeUnmute, 'unmute should restart music');
-console.log('PASS: music unlock, ghost boing, movement, five stars, next round, mute and unmute');
+console.log('PASS: keyboard tutorial, random stars and colors, ghost boing, next round, music and mute');

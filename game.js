@@ -23,24 +23,35 @@
   const tile = 64;
   const stepMs = 190;
   const dirs = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0] };
-  const starSeeds = [
-    {x:1,y:1,name:'Red',color:'#ff697c'},
-    {x:9,y:1,name:'Blue',color:'#55c8ff'},
-    {x:5,y:4,name:'Green',color:'#78e69b'},
-    {x:1,y:7,name:'Purple',color:'#d99aff'},
-    {x:9,y:7,name:'Orange',color:'#ffad5e'}
+  const starColors = [
+    {name:'Red',color:'#ff697c'},
+    {name:'Blue',color:'#55c8ff'},
+    {name:'Green',color:'#78e69b'},
+    {name:'Purple',color:'#d99aff'},
+    {name:'Orange',color:'#ffad5e'},
+    {name:'Yellow',color:'#ffe36c'},
+    {name:'Pink',color:'#ff91d1'},
+    {name:'Turquoise',color:'#5ee7d8'}
   ];
   const starSpots = [[1,1],[9,1],[5,4],[1,7],[9,7],[2,3],[8,3],[3,5],[7,5],[5,1]];
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   let player, stars, dots, ghosts, found, playing, soundOn = true, ghostTimer, ghostBumpTimer, autoTimer, travelTimer, turnTimer, cueTimer, nextRoundTimer, celebrateTimer;
   let audioContext, musicTimer, nextBeat = 0, musicStep = 0;
-  let lastGhostAt = 0, effects = [], animationStarted = false, lastFrame = 0, round = 0, chompCount = 0, hasStarted = false;
+  let lastGhostAt = 0, effects = [], animationStarted = false, lastFrame = 0, round = 0, lastStarCount = 0, chompCount = 0, hasStarted = false;
   const activeNotes = new Set();
   const melody = [523,0,659,0,784,659,523,0,587,0,659,0,784,659,587,0,523,659,784,0,880,784,659,0,587,659,523,0,392,0,523,0];
 
   function updateTrail() {
     starTrail.innerHTML = stars.map(s => `<span class="trail-star${s.found ? ' found' : ''}" style="--star-color:${s.color}" aria-hidden="true">★</span>`).join('');
-    starTrail.setAttribute('aria-label', `${found} of 5 stars found`);
+    starTrail.setAttribute('aria-label', `${found} of ${stars.length} stars found`);
+  }
+  function shuffled(items) {
+    const copy = [...items];
+    for (let i=copy.length-1;i>0;i--) {
+      const j=Math.floor(Math.random()*(i+1));
+      [copy[i],copy[j]]=[copy[j],copy[i]];
+    }
+    return copy;
   }
   function ensureAudio() {
     const Audio = window.AudioContext || window.webkitAudioContext;
@@ -109,7 +120,7 @@
     activeNotes.clear();
   }
   function showCue(star) {
-    colorCue.textContent = `★ ${star.name}! ${found} of 5!`;
+    colorCue.textContent = `★ ${star.name}! ${found} of ${stars.length}!`;
     colorCue.style.borderColor = star.color;
     colorCue.classList.remove('show');
     void colorCue.offsetWidth;
@@ -131,18 +142,22 @@
     clearInterval(ghostTimer); clearInterval(autoTimer); clearInterval(travelTimer); clearTimeout(turnTimer); clearTimeout(ghostBumpTimer);
     clearTimeout(cueTimer); clearTimeout(nextRoundTimer); clearTimeout(celebrateTimer);
     player = {x:5,y:7,fromX:5,fromY:7,movedAt:0,dir:'right',bumpedAt:0};
-    stars = starSeeds.map((seed,i) => {
-      const [x,y] = starSpots[round === 0 ? i : (round*3+i*3)%starSpots.length];
-      const color = starSeeds[(i+round)%starSeeds.length];
+    let starCount = 3 + Math.floor(Math.random()*5);
+    if (starCount === lastStarCount) starCount = 3 + ((starCount-3+1+Math.floor(Math.random()*4))%5);
+    lastStarCount = starCount;
+    const spots = shuffled(starSpots), colors = shuffled(starColors);
+    stars = Array.from({length:starCount},(_,i) => {
+      const [x,y] = spots[i];
+      const color = colors[i];
       return {x,y,name:color.name,color:color.color,found:false};
     });
     dots = new Set();
     map.forEach((row,y) => [...row].forEach((cell,x) => { if(cell === '.' && !stars.some(s => s.x === x && s.y === y)) dots.add(`${x},${y}`); }));
     ghosts = [{x:5,y:1,color:'#ff8fa8',last:'left'},{x:5,y:5,color:'#7ad6f2',last:'right'}];
     found = 0; playing = hasStarted; lastGhostAt = 0; effects = [];
-    progressText.textContent = round ? `Round ${round+1}: find five stars!` : 'Find the 5 colorful stars!';
-    starsCount.textContent = '⭐ 0 / 5';
-    message.textContent = 'Tap a star, or steer with the arrows!';
+    progressText.textContent = round ? `Round ${round+1}: find ${starCount} stars!` : `Find the ${starCount} colorful stars!`;
+    starsCount.textContent = `⭐ 0 / ${starCount}`;
+    message.textContent = 'Use your arrow keys to find the stars!';
     colorCue.classList.remove('show');
     updateTrail();
     draw(Date.now());
@@ -151,7 +166,9 @@
   }
   function open(x,y) { return map[y]?.[x] === '.'; }
   function start() {
-    hasStarted = true; round = 0; resetRound(); overlay.classList.add('hidden');
+    if (hasStarted) return;
+    hasStarted = true; playing = true; ghostTimer = setInterval(moveGhosts, 850);
+    overlay.classList.add('hidden');
     startButton.blur();
     startMusic();
     note(784, .04, .2, .12); note(1047, .24, .34, .12);
@@ -168,21 +185,21 @@
     const star = stars.find(s => !s.found && s.x === x && s.y === y);
     if (star) {
       star.found = true; found++;
-      starsCount.textContent = `⭐ ${found} / 5`;
-      progressText.textContent = found === 5 ? 'You found every color!' : `${5-found} more to find!`;
+      starsCount.textContent = `⭐ ${found} / ${stars.length}`;
+      progressText.textContent = found === stars.length ? 'You found every star!' : `${stars.length-found} more to find!`;
       message.textContent = `${star.name} star! Let’s count: ${found}!`;
       updateTrail(); showCue(star);
       if (!reducedMotion) effects.push({x:x*tile+32,y:y*tile+32,color:star.color,started:Date.now()});
-      note([523,587,659,698,784][found-1], 0, .22, .14);
-      note([784,880,988,1047,1175][found-1], .14, .34, .12);
-      if (found === 5) {
+      note([523,587,659,698,784,880,988][found-1], 0, .22, .14);
+      note([784,880,988,1047,1175,1319,1568][found-1], .14, .34, .12);
+      if (found === stars.length) {
         playing = false; clearInterval(ghostTimer); clearInterval(autoTimer); clearInterval(travelTimer); clearTimeout(turnTimer); clearTimeout(ghostBumpTimer);
-        progressText.textContent = 'Hooray! Five stars!';
+        progressText.textContent = `Hooray! ${stars.length} stars!`;
         message.textContent = 'Hooray! Here comes a new adventure!';
         note(784, .42, .19, .14); note(880, .64, .19, .14); note(1047, .86, .5, .16);
         if (!reducedMotion) effects.push(...stars.map(s => ({x:s.x*tile+32,y:s.y*tile+32,color:s.color,started:Date.now()+650})));
         celebrateTimer = setTimeout(() => {
-          colorCue.textContent = '🎉 FIVE STARS! 🎉';
+          colorCue.textContent = `🎉 ${stars.length} STARS! 🎉`;
           colorCue.style.borderColor = '#ffd449';
           colorCue.classList.remove('show'); void colorCue.offsetWidth; colorCue.classList.add('show');
         }, 1300);
@@ -336,7 +353,7 @@
   }
   document.addEventListener('keydown',e=>{
     const direction={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'}[e.key];
-    if(direction){e.preventDefault();if(!e.repeat)steer(direction);}
+    if(direction){e.preventDefault();if(!e.repeat){if(!hasStarted)start();steer(direction);}}
     else if(e.key===' '){
       if (document.activeElement === soundButton) return;
       e.preventDefault();
@@ -344,7 +361,6 @@
     }
     else if(e.key==='Enter'&&!hasStarted&&document.activeElement===document.body){e.preventDefault();start();}
   });
-  document.querySelectorAll('.move').forEach(button=>button.addEventListener('click',()=>steer(button.dataset.direction)));
   canvas.addEventListener('pointerdown',e=>{
     const rect=canvas.getBoundingClientRect();
     const x=(e.clientX-rect.left)*canvas.width/rect.width/tile;
