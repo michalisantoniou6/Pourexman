@@ -22,3 +22,7 @@ body::before{content:"";position:fixed;left:-30%;right:-30%;bottom:-13vh;height:
 .stage-banner.show{animation:stage-pop 2.95s ease-in-out forwards}
 @keyframes stage-pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.65) rotate(-4deg)}12%,78%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-52%) scale(1.08)}}
 @media(prefers-reduced-motion:reduce){.game-shell{animation:none}.game-shell.celebrating .trail-star.found{animation:none}.stage-banner.show{animation:none;opacity:1;transform:translate(-50%,-50%)}body::before{opacity:.13}}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.58;background-image:radial-gradient(circle,#72e8fa 1.5px,transparent 2px),radial-gradient(circle,#f277be 1.5px,transparent 2px),radial-gradient(circle,#ffe36d 1.2px,transparent 2px);background-size:173px 173px,227px 227px,311px 311px;background-position:22px 31px,105px 87px,170px 115px;animation:starfield-drift 24s linear infinite}
+@keyframes starfield-drift{to{background-position:22px 204px,105px 314px,170px 426px}}
+.game-shell.celebrating{animation:none}
+@media(prefers-reduced-motion:reduce){body::after{animation:none;opacity:.32}}
