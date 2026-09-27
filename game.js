@@ -241,15 +241,15 @@
     ctx.closePath(); ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=18; ctx.fill(); ctx.shadowBlur=0;
   }
   function draw(time = Date.now()) {
-    ctx.fillStyle='#171145';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#080b1d';ctx.fillRect(0,0,canvas.width,canvas.height);
     for(let y=0;y<map.length;y++) for(let x=0;x<map[y].length;x++) {
       const px=x*tile,py=y*tile;
       if(map[y][x]==='#') {
-        roundRect(px+4,py+4,tile-8,tile-8,14,'#5a4bb0');
-        roundRect(px+10,py+10,tile-20,tile-20,10,'#7767d6');
+        roundRect(px+4,py+4,tile-8,tile-8,9,'#367aff');
+        roundRect(px+10,py+10,tile-20,tile-20,6,'#10183d');
       } else {
-        roundRect(px+3,py+3,tile-6,tile-6,12,(x+y)%2?'#201954':'#241d5a');
-        if(dots.has(`${x},${y}`)) {ctx.beginPath();ctx.arc(px+32,py+32,4,0,Math.PI*2);ctx.fillStyle='#f9dba0';ctx.fill();}
+        roundRect(px+3,py+3,tile-6,tile-6,6,(x+y)%2?'#0a1028':'#0d1430');
+        if(dots.has(`${x},${y}`)) {ctx.beginPath();ctx.arc(px+32,py+32,4,0,Math.PI*2);ctx.fillStyle='#ffe18b';ctx.fill();}
       }
     }
     stars.filter(s=>!s.found).forEach((s,i)=>{
@@ -288,7 +288,7 @@
     const mouth = reducedMotion ? .24 : .19 + .17*Math.abs(Math.sin(time/140));
     ctx.fillStyle='#e9a632';ctx.beginPath();ctx.moveTo(cx,cy+4);ctx.arc(cx,cy+4,25,facing+mouth,facing+Math.PI*2-mouth);ctx.closePath();ctx.fill();
     ctx.fillStyle='#ffd645';ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,25,facing+mouth,facing+Math.PI*2-mouth);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#2a2251';ctx.beginPath();ctx.arc(cx+3,cy-13,3.2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#10183d';ctx.beginPath();ctx.arc(cx+3,cy-13,3.2,0,Math.PI*2);ctx.fill();
     effects = effects.filter(effect => time - effect.started < (effect.kind==='boing'?850:650));
     effects.forEach(effect => {
       if (time < effect.started) return;
